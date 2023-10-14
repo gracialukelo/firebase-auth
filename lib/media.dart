@@ -4,7 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class MediePage extends StatefulWidget {
-  const MediePage({Key? key});
+  const  MediePage({Key? key});
 
   @override
   State<MediePage> createState() => _MediePageState();
@@ -13,7 +13,7 @@ class MediePage extends StatefulWidget {
 class _MediePageState extends State<MediePage> {
   List<Post>? posts;
   bool isLoaded = false;
-  String imageFile = "";
+  List<String> imageFiles = [];
 
   @override
   void initState() {
@@ -26,11 +26,8 @@ class _MediePageState extends State<MediePage> {
   Future<List<Post>?> fetchPosts() async {
     try {
       final QuerySnapshot response = await firestore.collection("Post").get();
-      final List<Map<String, dynamic>> rawData = response.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
-          .toList();
-      final List<Post> loadedPosts =
-          rawData.map((data) => Post.fromJson(data)).toList();
+      final List<Map<String, dynamic>> rawData = response.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+      final List<Post> loadedPosts = rawData.map((data) => Post.fromJson(data)).toList();
       return loadedPosts;
     } catch (error) {
       debugPrint("Fehler beim Datenabruf: $error");
@@ -40,24 +37,37 @@ class _MediePageState extends State<MediePage> {
 
   Future<void> getData() async {
     final loadedPosts = await fetchPosts();
-    final imageFiley = await getDownloadURL("omba app-icon.png"); // Ändere den Dateinamen hier entsprechend
+    final imageFiley = await getDownloadURLs(["omba app-icon.png", "Component 4.png"]); // Dateinamen hier entsprechend anpassen
 
     if (loadedPosts != null) {
       setState(() {
         posts = loadedPosts;
         isLoaded = true;
-        imageFile = imageFiley;
+        imageFiles = imageFiley;
       });
     }
   }
 
-  Future<String> getDownloadURL(String fileName) async {
+  Future<List<String>> getDownloadURLs(List<String> fileNames) async {
     try {
-      return await FirebaseStorage.instance.ref().child(fileName).getDownloadURL();
+      final List<String> downloadURLs = [];
+      for (var fileName in fileNames) {
+        final url = await FirebaseStorage.instance.ref().child(fileName).getDownloadURL();
+        downloadURLs.add(url);
+      }
+      return downloadURLs;
     } catch (e) {
-      return "";
+      return [];
     }
   }
+
+  //   Future<String> getDownloadURL(String fileName) async {
+  //   try {
+  //     return await FirebaseStorage.instance.ref().child(fileName).getDownloadURL();
+  //   } catch (e) {
+  //     return "";
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +93,7 @@ class _MediePageState extends State<MediePage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: NetworkImage(imageFile), // Verwende NetworkImage
+                        image: NetworkImage(imageFiles[index]), // Verwende NetworkImage
                         fit: BoxFit.fill,
                       ),
                     ),
