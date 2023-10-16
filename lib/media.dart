@@ -4,7 +4,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class MediePage extends StatefulWidget {
-  const  MediePage({Key? key});
+  const MediePage({
+    super.key,
+  });
 
   @override
   State<MediePage> createState() => _MediePageState();
@@ -26,8 +28,11 @@ class _MediePageState extends State<MediePage> {
   Future<List<Post>?> fetchPosts() async {
     try {
       final QuerySnapshot response = await firestore.collection("Post").get();
-      final List<Map<String, dynamic>> rawData = response.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
-      final List<Post> loadedPosts = rawData.map((data) => Post.fromJson(data)).toList();
+      final List<Map<String, dynamic>> rawData = response.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+      final List<Post> loadedPosts =
+          rawData.map((data) => Post.fromJson(data)).toList();
       return loadedPosts;
     } catch (error) {
       debugPrint("Fehler beim Datenabruf: $error");
@@ -35,9 +40,14 @@ class _MediePageState extends State<MediePage> {
     }
   }
 
+  /* 
+  TODO: E-MAil Bestätigung. und Media Ordnung
+   */
+
   Future<void> getData() async {
     final loadedPosts = await fetchPosts();
-    final imageFiley = await getDownloadURLs(["omba app-icon.png", "Component 4.png"]); // Dateinamen hier entsprechend anpassen
+    final imageFiley =
+        await getDownloadURLs(["omba app-icon.png", "Component 4.png"]);
 
     if (loadedPosts != null) {
       setState(() {
@@ -52,7 +62,10 @@ class _MediePageState extends State<MediePage> {
     try {
       final List<String> downloadURLs = [];
       for (var fileName in fileNames) {
-        final url = await FirebaseStorage.instance.ref().child(fileName).getDownloadURL();
+        final url = await FirebaseStorage.instance
+            .ref()
+            .child(fileName)
+            .getDownloadURL();
         downloadURLs.add(url);
       }
       return downloadURLs;
@@ -93,7 +106,7 @@ class _MediePageState extends State<MediePage> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: NetworkImage(imageFiles[index]), // Verwende NetworkImage
+                        image: NetworkImage(imageFiles[index]),
                         fit: BoxFit.fill,
                       ),
                     ),

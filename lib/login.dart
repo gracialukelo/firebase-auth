@@ -1,7 +1,8 @@
 import 'package:anmeldung/firebase_options.dart';
 import 'package:anmeldung/media.dart';
+import 'package:anmeldung/password_reset.dart';
+import 'package:anmeldung/verify_email.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -16,7 +17,6 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -34,7 +34,7 @@ class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -42,11 +42,9 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  // Erstelle User ein mit Password und E-Mail
   Future<void> createUserWithEmailPassword() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Versuchen Sie, einen neuen Benutzer mit E-Mail und Passwort zu erstellen
         UserCredential userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text,
@@ -54,14 +52,13 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         if (userCredential.user != null) {
-          // Erfolgreiche Registrierung
-          _showDialog('Erfolgreich registriert', 'Sie sind jetzt registriert.');
+          _showDialogy('Willkommen bei OMBA',
+              'Bitte überprüfen Sie Ihre E-Mail und klicken Sie auf den Bestätigungslink.');
         } else {
           _showDialog('Registrierung fehlgeschlagen',
               'Die Registrierung ist fehlgeschlagen. Bitte versuchen Sie es erneut.');
         }
       } catch (e) {
-        // Fehler bei der Registrierung
         _showDialog('Registrierung fehlgeschlagen',
             'Die Registrierung ist fehlgeschlagen. Bitte überprüfen Sie Ihre Daten und versuchen Sie es erneut.');
       }
@@ -69,25 +66,22 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Melde User ein mit Password und E-Mail
-
   Future<void> logInUserWithEmailPassword() async {
     if (_formKey.currentState!.validate()) {
       try {
         final UserCredential userCredential =
             await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text,
+          email: emailController.text.trim(),
           password: passwordController.text,
         );
 
         if (userCredential.user != null) {
-          // Der Benutzer wurde erfolgreich angemeldet
           _showDialogx('Erfolgreich angemeldet', 'Sie sind jetzt angemeldet.');
         } else {
           _showDialog('Anmeldung fehlgeschlagen',
               'Die Anmeldung mit E-Mail und Passwort ist fehlgeschlagen.');
         }
       } catch (e) {
-        // Fehler bei der Anmeldung
         _showDialog('Anmeldung fehlgeschlagen',
             'Die Anmeldung mit E-Mail und Passwort ist fehlgeschlagen.');
       }
@@ -113,19 +107,14 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ANmeldung mit google
-
   Future<void> handleSignInWithGoogle() async {
     try {
       UserCredential userCredential = await signInWithGoogle();
 
-      // Überprüfen, ob die Anmeldung erfolgreich war
       if (userCredential.user != null) {
-        // Erfolgreich angemeldet
         _showDialogx('Erfolgreich angemeldet', 'Sie sind jetzt angemeldet.');
       }
     } catch (e) {
-      // Fehler bei der Anmeldung
       _showDialog('Anmeldung fehlgeschlagen',
           'Die Anmeldung mit Google ist fehlgeschlagen.');
     }
@@ -163,8 +152,31 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) =>
-                        const MediePage(), // Ersetzen Sie 'NextPage' durch den Namen Ihrer Zielseite
+                    builder: (context) => const MediePage(),
+                  ),
+                );
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDialogy(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => const VerifyScreen(),
                   ),
                 );
               },
@@ -220,13 +232,21 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(
                 height: 32,
               ),
-              ElevatedButton(
-                onPressed: createUserWithEmailPassword,
-                child: const Text('Registrieren'),
-              ),
-              ElevatedButton(
-                onPressed: logInUserWithEmailPassword,
-                child: const Text('E-Mail/Passwort anmelden'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: createUserWithEmailPassword,
+                    child: const Text('Registrieren'),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  ElevatedButton(
+                    onPressed: logInUserWithEmailPassword,
+                    child: const Text('Anmelden'),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               SignInButton(
@@ -234,6 +254,12 @@ class _LoginPageState extends State<LoginPage> {
                 text: 'Mit Google anmelden',
                 onPressed: handleSignInWithGoogle,
               ),
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const ResetPassword()));
+                  },
+                  child: const Text("Password vergesse? "))
             ],
           ),
         ),
